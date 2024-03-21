@@ -3,26 +3,24 @@ package com.example.libraryservice.controller;
 import com.example.libraryservice.DTO.BookResponseDTO;
 
 import com.example.libraryservice.service.BookService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @RestController
 @RequestMapping("/quantity")
 public class LibraryController {
 
     private final BookService bookService;
 
-    @PostMapping("/taking/books/{name}")
-    @ResponseStatus(HttpStatus.OK)
-    public BookResponseDTO takeBook(@PathVariable String name)  {
+    @GetMapping("/taking/books/{name}")
+    public ResponseEntity<BookResponseDTO> takeBook(@PathVariable String name)  {
         return bookService.takeBook(name);
     }
 
     @PostMapping("/return/books/{name}")
-    @ResponseStatus(HttpStatus.CREATED)
-    public BookResponseDTO returnBook(@PathVariable String name) {
+    public ResponseEntity<BookResponseDTO> returnBook(@PathVariable String name) {
         return bookService.returnBook(name);
     }
 

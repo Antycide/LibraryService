@@ -3,14 +3,14 @@ package com.example.libraryservice.controller;
 import com.example.libraryservice.DTO.BookResponseDTO;
 import com.example.libraryservice.entity.Book;
 import com.example.libraryservice.service.BookService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @RestController
 @RequestMapping("/books")
 public class BookController {
@@ -19,19 +19,17 @@ public class BookController {
 
 
     @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    public BookResponseDTO addBook(@RequestBody Book book) {
+    public ResponseEntity<BookResponseDTO> addBook(@RequestBody Book book) {
         return bookService.saveBook(book);
     }
 
     @GetMapping("/{name}")
-    @ResponseStatus(HttpStatus.CREATED)
-    public BookResponseDTO getBook(@PathVariable String name){
+    public ResponseEntity<BookResponseDTO> getBook(@PathVariable String name){
         return bookService.getBook(name);
     }
 
     @GetMapping
-    public List<BookResponseDTO> findAll() {
+    public ResponseEntity<List<BookResponseDTO>> findAll() {
         return bookService.findAll();
     }
 
