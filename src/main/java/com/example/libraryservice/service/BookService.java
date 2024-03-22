@@ -5,11 +5,11 @@ import com.example.libraryservice.entity.Author;
 import com.example.libraryservice.entity.Book;
 
 
+import com.example.libraryservice.exception.BookAlreadyTakenException;
+import com.example.libraryservice.exception.BookDoesntExistException;
 import com.example.libraryservice.repository.AuthorRepository;
 import com.example.libraryservice.repository.BookRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,9 +23,9 @@ public class BookService {
     public final AuthorRepository authorRepository;
     public final BookMapper bookMapper;
 
-    public ResponseEntity<BookResponseDTO> saveBook(Book book)  {
+    public BookResponseDTO saveBook(Book book)  {
         if (bookRepository.findByNameIgnoreCase(book.getName()).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.ALREADY_REPORTED);
+            throw new BookAlreadyTakenException("Book already exists");
         }
         Author author = new Author();
         author.setName(book.getAuthor().getName());
@@ -33,44 +33,41 @@ public class BookService {
         authorRepository.save(author);
         bookRepository.save(book);
 
-        return new ResponseEntity<>(bookMapper.toBookResponseDTO(Optional.of(book)),
-                HttpStatus.ACCEPTED);
+        return bookMapper.toBookResponseDTO(Optional.of(book));
     }
 
-    public ResponseEntity<BookResponseDTO> getBook(String name) {
+    public BookResponseDTO getBook(String name) {
         if (bookRepository.findByNameIgnoreCase(name).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new BookAlreadyTakenException("Book was already taken");
         }
-        return new ResponseEntity<>(bookMapper.toBookResponseDTO(bookRepository.findByNameIgnoreCase(name))
-                ,HttpStatus.ACCEPTED);
+        return bookMapper.toBookResponseDTO(bookRepository.findByNameIgnoreCase(name));
     }
 
-    public ResponseEntity<BookResponseDTO> takeBook(String name) {
+    public BookResponseDTO takeBook(String name) {
         Optional<Book> book = bookRepository.findByNameIgnoreCase(name);
 
         if (book.isPresent() && book.get().getQuantity() > 0) {
             book.get().setQuantity(book.get().getQuantity() - 1);
             bookRepository.save(book.get());
-            return new ResponseEntity<>(bookMapper.toBookResponseDTO(Optional.of(bookRepository.save(book.get()))),
-                    HttpStatus.ACCEPTED);
+            return bookMapper.toBookResponseDTO(Optional.of(bookRepository.save(book.get())));
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+       throw new BookAlreadyTakenException("Book already taken");
     }
 
-    public ResponseEntity<BookResponseDTO> returnBook(String name) {
+    public BookResponseDTO returnBook(String name) {
         Optional<Book> book = bookRepository.findByNameIgnoreCase(name);
-        if (book.isPresent()) {
-            book.get().setQuantity(book.get().getQuantity() + 1);
-            bookRepository.save(book.get());
-            return new ResponseEntity<>(bookMapper.toBookResponseDTO(book),
-                    HttpStatus.ACCEPTED);
+        if (book.isEmpty()) {
+            throw new BookDoesntExistException("Book does not exist");
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        book.get().setQuantity(book.get().getQuantity() + 1);
+        bookRepository.save(book.get());
+        return bookMapper.toBookResponseDTO(book);
+
     }
 
-    public ResponseEntity<List<BookResponseDTO>> findAll() {
-        return new ResponseEntity<>(bookRepository.findAll().stream().
+    public List<BookResponseDTO> findAll() {
+        return bookRepository.findAll().stream().
                 map(book -> bookMapper.toBookResponseDTO(Optional.ofNullable(book))).
-                toList(), HttpStatus.ACCEPTED);
+                toList();
     }
 }
