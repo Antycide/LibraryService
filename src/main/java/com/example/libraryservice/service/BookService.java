@@ -23,7 +23,7 @@ public class BookService {
     public final AuthorRepository authorRepository;
     public final BookMapper bookMapper;
 
-    public BookResponseDTO saveBook(Book book)  {
+    public BookResponseDTO saveBook(Book book) throws BookDoesntExistException  {
         if (bookRepository.findByNameIgnoreCase(book.getName()).isPresent()) {
             throw new BookAlreadyTakenException("Book already exists");
         }
@@ -36,14 +36,14 @@ public class BookService {
         return bookMapper.toBookResponseDTO(Optional.of(book));
     }
 
-    public BookResponseDTO getBook(String name) {
+    public BookResponseDTO getBook(String name) throws BookAlreadyTakenException {
         if (bookRepository.findByNameIgnoreCase(name).isEmpty()) {
             throw new BookAlreadyTakenException("Book was already taken");
         }
         return bookMapper.toBookResponseDTO(bookRepository.findByNameIgnoreCase(name));
     }
 
-    public BookResponseDTO takeBook(String name) {
+    public BookResponseDTO takeBook(String name) throws BookAlreadyTakenException {
         Optional<Book> book = bookRepository.findByNameIgnoreCase(name);
 
         if (book.isPresent() && book.get().getQuantity() > 0) {
@@ -54,7 +54,7 @@ public class BookService {
        throw new BookAlreadyTakenException("Book already taken");
     }
 
-    public BookResponseDTO returnBook(String name) {
+    public BookResponseDTO returnBook(String name) throws BookDoesntExistException {
         Optional<Book> book = bookRepository.findByNameIgnoreCase(name);
         if (book.isEmpty()) {
             throw new BookDoesntExistException("Book does not exist");
